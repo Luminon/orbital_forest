@@ -76,7 +76,6 @@ class HomeViewModel(
             try {
                 val appFolderUri = settingsRepository.safAppFolderUri.filterNotNull().first()
                 val doc = documentRepository.readDocument(appFolderUri, fileName)
-                settingsRepository.setCurrentDocumentName(fileName)
                 _uiState.update { it.copy(currentDocument = doc, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
@@ -264,12 +263,13 @@ class HomeViewModel(
                 val remaining = documentRepository.getAllDocuments(appFolderUri).first()
                 _uiState.update { it.copy(showDocumentMenu = false) }
                 if (remaining.isEmpty()) {
+                    settingsRepository.setCurrentDocumentName("")
                     _uiState.update { it.copy(currentDocument = null, snackbarMessage = "문서를 삭제했습니다.") }
                     onNoDocuments()
                 } else {
-                    val nextDoc = documentRepository.readDocument(appFolderUri, remaining[0].fileName)
+                    _uiState.update { it.copy(snackbarMessage = "문서를 삭제했습니다.") }
                     settingsRepository.setCurrentDocumentName(remaining[0].fileName)
-                    _uiState.update { it.copy(currentDocument = nextDoc, snackbarMessage = "문서를 삭제했습니다.") }
+                    // init flow will call loadDocument(remaining[0].fileName)
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(snackbarMessage = "문서 삭제에 실패했습니다.") }
@@ -278,8 +278,10 @@ class HomeViewModel(
     }
 
     fun onNewDocumentCreated(fileName: String) {
-        loadDocument(fileName)
         _uiState.update { it.copy(isNewDocDialogVisible = false) }
+        viewModelScope.launch {
+            settingsRepository.setCurrentDocumentName(fileName)
+        }
     }
 
     fun onShowNewDocDialog() {

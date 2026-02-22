@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,15 +38,20 @@ fun OrbitalForestNavGraph(navController: NavHostController) {
     val settingsRepo = remember { SettingsRepositoryImpl(app.appDataStore) }
     val documentRepo = remember { DocumentRepositoryImpl(DocumentDataSource(context)) }
 
-    // null = 아직 로딩 중, true = 유효한 URI 있음, false = URI 없거나 무효
+    // null = 아직 DataStore 로딩 중, true = 유효한 URI 있음, false = URI 없거나 무효
     var isUriValid by remember { mutableStateOf<Boolean?>(null) }
-    val safUri by settingsRepo.safAppFolderUri.collectAsState(initial = null)
 
-    LaunchedEffect(safUri) {
-        isUriValid = if (safUri != null) {
-            isUriPermissionValid(context, safUri!!)
-        } else {
-            false
+    // DataStore 첫 번째 emit을 기다렸다가 판단 (initial = null이면 아직 로딩 중)
+    // 영구 권한은 루트 URI에 부여되므로 safRootUri로 검사
+    LaunchedEffect(Unit) {
+        settingsRepo.safRootUri.collect { uri ->
+            isUriValid = if (uri != null) {
+                isUriPermissionValid(context, uri)
+            } else {
+                false
+            }
+            // 첫 값을 받았으면 더 이상 collect 불필요 — NavHost가 이미 결정됨
+            return@collect
         }
     }
 

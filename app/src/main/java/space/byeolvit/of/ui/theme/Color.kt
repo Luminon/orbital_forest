@@ -2,39 +2,43 @@ package space.byeolvit.of.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Placeholder colors — will be replaced with Figma-extracted tokens
-val Primary = Color(0xFF2D6A4F)
-val OnPrimary = Color(0xFFFFFFFF)
-val PrimaryContainer = Color(0xFFB7E4C7)
-val OnPrimaryContainer = Color(0xFF0A3622)
+// Orbital Forest dark theme — extracted from Figma
+val Background = Color(0xFF13131A)
+val OnBackground = Color(0xFFFFFFFF)
 
-val Secondary = Color(0xFF52796F)
-val OnSecondary = Color(0xFFFFFFFF)
-val SecondaryContainer = Color(0xFFCAE8E0)
-val OnSecondaryContainer = Color(0xFF0E2D27)
+val Surface = Color(0xFF1C1C26)        // list item background (unchecked)
+val OnSurface = Color(0xFFFFFFFF)
 
-val Tertiary = Color(0xFF74C69D)
-val OnTertiary = Color(0xFF002114)
-val TertiaryContainer = Color(0xFFD8F3DC)
-val OnTertiaryContainer = Color(0xFF001A0F)
+val SurfaceVariant = Color(0xFF424259) // checked item background
+val OnSurfaceVariant = Color(0xFFE6E0E9)
 
-val Error = Color(0xFFBA1A1A)
-val OnError = Color(0xFFFFFFFF)
-val ErrorContainer = Color(0xFFFFDAD6)
-val OnErrorContainer = Color(0xFF410002)
+val Primary = Color(0xFFBDC2FF)        // accent: title, FAB, badge
+val OnPrimary = Color(0xFF13131A)
+val PrimaryContainer = Color(0xFFBDC2FF)
+val OnPrimaryContainer = Color(0xFF13131A)
+val PrimaryBadge = Color(0x3DBDC2FF)   // .md badge background (24% alpha)
 
-val Background = Color(0xFFF8FBF8)
-val OnBackground = Color(0xFF191C1A)
-val Surface = Color(0xFFF8FBF8)
-val OnSurface = Color(0xFF191C1A)
-val SurfaceVariant = Color(0xFFDBE5DC)
-val OnSurfaceVariant = Color(0xFF404943)
-val Outline = Color(0xFF707973)
-val OutlineVariant = Color(0xFFBFC9C1)
-val InverseSurface = Color(0xFF2E312F)
-val InverseOnSurface = Color(0xFFEFF1EE)
-val InversePrimary = Color(0xFF95D5B2)
+val Secondary = Color(0xFFCBC2FF)
+val OnSecondary = Color(0xFF322A72)
+val SecondaryContainer = Color(0xFF48419A)
+val OnSecondaryContainer = Color(0xFFE4DFFF)
+
+val Tertiary = Color(0xFFEFB8C8)
+val OnTertiary = Color(0xFF492532)
+val TertiaryContainer = Color(0xFF633B48)
+val OnTertiaryContainer = Color(0xFFFFD8E4)
+
+val Error = Color(0xFFCF6679)
+val OnError = Color(0xFF601410)
+val ErrorContainer = Color(0xFF8C1D18)
+val OnErrorContainer = Color(0xFFF9DEDC)
+
+val Outline = Color(0xFF938F99)
+val OutlineVariant = Color(0xFF49454F)
+val InverseSurface = Color(0xFFE6E1E5)
+val InverseOnSurface = Color(0xFF313033)
+val InversePrimary = Color(0xFF6750A4)
 val Scrim = Color(0xFF000000)
 val SurfaceTint = Primary
 
-val CheckedBackground = Color(0xFFD8F3DC)
+val CheckedBackground = SurfaceVariant

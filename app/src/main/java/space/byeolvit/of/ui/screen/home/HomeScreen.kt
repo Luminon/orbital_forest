@@ -3,35 +3,32 @@ package space.byeolvit.of.ui.screen.home
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.res.painterResource
+import space.byeolvit.of.R
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +42,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,6 +56,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import space.byeolvit.of.data.model.ChecklistItem
 import space.byeolvit.of.data.model.DocumentBlock
 import space.byeolvit.of.ui.components.ChecklistItemRow
 import space.byeolvit.of.ui.components.ContextMenuSheet
@@ -120,55 +119,19 @@ fun HomeScreen(
                     },
                     actions = {
                         IconButton(onClick = { viewModel.onDocumentMenuOpen() }) {
-                            Icon(Icons.Default.Info, contentDescription = "문서 정보")
+                            Icon(
+                                painter = painterResource(R.drawable.ic_documents),
+                                contentDescription = "문서 정보"
+                            )
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
                 )
             }
         },
-        bottomBar = {
-            AnimatedVisibility(
-                visible = !uiState.isScrolled,
-                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
-            ) {
-                Surface(shadowElevation = 4.dp) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        IconButton(onClick = { viewModel.onShowNewDocDialog() }) {
-                            Icon(Icons.Default.Add, contentDescription = "문서 생성")
-                        }
-                        IconButton(onClick = onNavigateToSelect) {
-                            Icon(Icons.Default.List, contentDescription = "문서 선택")
-                        }
-                        IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Default.Settings, contentDescription = "설정")
-                        }
-                    }
-                }
-            }
-        },
-        floatingActionButton = {
-            AnimatedContent(
-                targetState = uiState.showAddField,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "FabTransition"
-            ) { showField ->
-                if (!showField) {
-                    FloatingActionButton(
-                        onClick = { viewModel.onAddFieldToggle() }
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "체크리스트 추가")
-                    }
-                } else {
-                    // FAB 상태일 때는 하단 입력 필드를 사용하므로 FAB 숨김
-                }
-            }
-        },
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(
@@ -179,7 +142,6 @@ fun HomeScreen(
             val doc = uiState.currentDocument
 
             if (doc == null) {
-                // HME_15: md 파일이 없는 경우
                 EmptyDocumentView(modifier = Modifier.fillMaxSize())
             } else {
                 val visibleBlocks = doc.blocks.filter { block ->
@@ -189,47 +151,53 @@ fun HomeScreen(
                     }
                 }
 
-                val hasItems = visibleBlocks.any { block ->
-                    block is DocumentBlock.ChecklistBlock && block.items.isNotEmpty()
+                val hasVisibleContent = visibleBlocks.any { block ->
+                    when (block) {
+                        is DocumentBlock.ChecklistBlock -> block.items.isNotEmpty()
+                        is DocumentBlock.MemoBlock -> true
+                    }
                 }
 
-                if (!hasItems && visibleBlocks.none { it is DocumentBlock.MemoBlock }) {
-                    // HME_01: Empty View
+                if (!hasVisibleContent) {
                     EmptyChecklistView(modifier = Modifier.fillMaxSize())
                 } else {
-                    // HME_02: 체크리스트 목록
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .fadingEdge(topFadeBrush)
-                                .fadingEdge(bottomFadeBrush)
-                        ) {
-                            visibleBlocks.forEach { block ->
-                                when (block) {
-                                    is DocumentBlock.ChecklistBlock -> {
-                                        val displayItems = if (uiState.hideCompleted) {
-                                            block.items.filter { !it.isChecked }
-                                        } else block.items
+                    LazyColumn(
+                        state = listState,
+                        contentPadding = PaddingValues(
+                            start = 24.dp,
+                            end = 24.dp,
+                            top = 16.dp,
+                            bottom = 120.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .fadingEdge(topFadeBrush)
+                            .fadingEdge(bottomFadeBrush)
+                    ) {
+                        visibleBlocks.forEachIndexed { blockIdx, block ->
+                            when (block) {
+                                is DocumentBlock.ChecklistBlock -> {
+                                    val displayItems = if (uiState.hideCompleted) {
+                                        block.items.filter { !it.isChecked }
+                                    } else block.items
 
-                                        items(displayItems, key = { it.id }) { item ->
-                                            ChecklistItemRow(
-                                                item = item,
-                                                depth = 0,
+                                    if (displayItems.isNotEmpty()) {
+                                        item(key = "checklist_$blockIdx") {
+                                            ChecklistGroupCard(
+                                                items = displayItems,
                                                 onChecked = { i, checked -> viewModel.onCheckItem(i, checked) },
                                                 onLongPress = { viewModel.onContextMenuOpen(it) }
                                             )
                                         }
                                     }
-                                    is DocumentBlock.MemoBlock -> {
-                                        item {
-                                            MemoBlock(rawText = block.rawText)
-                                        }
+                                }
+                                is DocumentBlock.MemoBlock -> {
+                                    item(key = "memo_$blockIdx") {
+                                        MemoBlock(rawText = block.rawText)
                                     }
                                 }
                             }
-                            item { Spacer(modifier = Modifier.height(80.dp)) }
                         }
                     }
                 }
@@ -249,6 +217,39 @@ fun HomeScreen(
                     onAdd = { viewModel.onAddItem(uiState.addFieldText) },
                     onDismiss = { viewModel.onAddFieldDismiss() }
                 )
+            }
+
+            // 하단 컨트롤: 플로팅 툴바 + FAB
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+            ) {
+                // 툴바 (스크롤 시 또는 입력 필드 표시 시 숨김)
+                AnimatedVisibility(
+                    visible = !uiState.isScrolled && !uiState.showAddField,
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomStart)
+                ) {
+                    ToolbarPill(
+                        onNewDoc = { viewModel.onShowNewDocDialog() },
+                        onSelectDoc = onNavigateToSelect,
+                        onSettings = onNavigateToSettings
+                    )
+                }
+
+                // FAB (입력 필드 표시 시만 숨김, 스크롤 시에도 유지)
+                AnimatedVisibility(
+                    visible = !uiState.showAddField,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    LargeAddFab(onClick = { viewModel.onAddFieldToggle() })
+                }
             }
         }
     }
@@ -292,6 +293,116 @@ fun HomeScreen(
     }
 }
 
+// ──────────────────────────────────────────────
+// 체크리스트 그룹 카드 (Figma: List — rounded-[16dp] 컨테이너, 2dp 간격)
+// ──────────────────────────────────────────────
+
+@Composable
+private fun ChecklistGroupCard(
+    items: List<ChecklistItem>,
+    onChecked: (ChecklistItem, Boolean) -> Unit,
+    onLongPress: (ChecklistItem) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column {
+            items.forEachIndexed { index, item ->
+                if (index > 0) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                }
+                ChecklistItemRow(
+                    item = item,
+                    depth = 0,
+                    onChecked = onChecked,
+                    onLongPress = onLongPress
+                )
+            }
+        }
+    }
+}
+
+// ──────────────────────────────────────────────
+// 플로팅 툴바 필 (Figma: Toolbar — rounded-[32dp] pill)
+// ──────────────────────────────────────────────
+
+@Composable
+private fun ToolbarPill(
+    onNewDoc: () -> Unit,
+    onSelectDoc: () -> Unit,
+    onSettings: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.background,
+        shadowElevation = 4.dp,
+        tonalElevation = 0.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onNewDoc,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_add),
+                    contentDescription = "문서 생성",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            IconButton(
+                onClick = onSelectDoc,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_doc_lists),
+                    contentDescription = "문서 선택",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            IconButton(
+                onClick = onSettings,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_settings),
+                    contentDescription = "설정",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
+        }
+    }
+}
+
+// ──────────────────────────────────────────────
+// 대형 FAB (Figma: FAB — 80dp, rounded-[20dp], primary color)
+// ──────────────────────────────────────────────
+
+@Composable
+private fun LargeAddFab(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.size(80.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_plus),
+            contentDescription = "체크리스트 추가",
+            modifier = Modifier.size(28.dp)
+        )
+    }
+}
+
+// ──────────────────────────────────────────────
+// 빈 화면 뷰
+// ──────────────────────────────────────────────
+
 @Composable
 private fun EmptyDocumentView(modifier: Modifier = Modifier) {
     Column(
@@ -328,6 +439,10 @@ private fun EmptyChecklistView(modifier: Modifier = Modifier) {
     }
 }
 
+// ──────────────────────────────────────────────
+// 항목 작성 필드 (HME_10 / HME_09)
+// ──────────────────────────────────────────────
+
 @Composable
 private fun AddItemField(
     text: String,
@@ -344,11 +459,13 @@ private fun AddItemField(
 
     Surface(
         shadowElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .imePadding()
                 .padding(16.dp)
         ) {
@@ -379,7 +496,10 @@ private fun AddItemField(
                     onClick = onAdd,
                     enabled = text.isNotBlank()
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "추가")
+                    Icon(
+                        painter = painterResource(R.drawable.ic_plus),
+                        contentDescription = "추가"
+                    )
                 }
             }
         }
