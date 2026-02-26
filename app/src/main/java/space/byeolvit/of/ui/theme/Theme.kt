@@ -1,8 +1,11 @@
 package space.byeolvit.of.ui.theme
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface as M3Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
 private val DarkColorScheme = darkColorScheme(
     primary = Primary,
@@ -43,7 +46,12 @@ fun OrbitalForestTheme(
     MaterialTheme(
         colorScheme = DarkColorScheme,
         typography = OrbitalForestTypography,
-        shapes = OrbitalForestShapes,
-        content = content
-    )
+        shapes = OrbitalForestShapes
+    ) {
+        M3Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+            content = content
+        )
+    }
 }

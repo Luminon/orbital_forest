@@ -3,6 +3,7 @@ package space.byeolvit.of.ui.screen.home
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,16 +15,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.res.painterResource
@@ -33,7 +39,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -104,6 +109,10 @@ fun HomeScreen(
         viewModel.onSnackbarDismissed()
     }
 
+    BackHandler(enabled = uiState.showAddField) {
+        viewModel.onAddFieldDismiss()
+    }
+
     Scaffold(
         topBar = {
             AnimatedVisibility(
@@ -132,6 +141,7 @@ fun HomeScreen(
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(
@@ -244,8 +254,8 @@ fun HomeScreen(
                 // FAB (입력 필드 표시 시만 숨김, 스크롤 시에도 유지)
                 AnimatedVisibility(
                     visible = !uiState.showAddField,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                     modifier = Modifier.align(Alignment.BottomEnd)
                 ) {
                     LargeAddFab(onClick = { viewModel.onAddFieldToggle() })
@@ -458,47 +468,67 @@ private fun AddItemField(
     }
 
     Surface(
-        shadowElevation = 8.dp,
-        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp),
+        color = MaterialTheme.colorScheme.primary,
+        shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(16.dp)
+                .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             if (parentName != null) {
                 Text(
                     text = "하위 항목 작성중 · $parentName",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                OutlinedTextField(
+                BasicTextField(
                     value = text,
                     onValueChange = onTextChanged,
-                    placeholder = { Text("작성해주시길 기다리고 있어요...") },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onPrimary
+                    ),
                     maxLines = 10,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                     keyboardActions = KeyboardActions.Default,
                     modifier = Modifier
                         .weight(1f)
-                        .focusRequester(focusRequester)
+                        .focusRequester(focusRequester),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (text.isEmpty()) {
+                                Text(
+                                    text = "작성해주시길 기다리고 있어요...",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
                 )
-                IconButton(
+
+                Surface(
                     onClick = onAdd,
-                    enabled = text.isNotBlank()
+                    enabled = text.isNotBlank(),
+                    shape = RoundedCornerShape(999.dp),
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_plus),
-                        contentDescription = "추가"
+                        contentDescription = "추가",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp)
                     )
                 }
             }
