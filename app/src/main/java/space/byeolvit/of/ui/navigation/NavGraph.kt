@@ -1,5 +1,11 @@
 package space.byeolvit.of.ui.navigation
 
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +35,10 @@ import space.byeolvit.of.ui.screen.select.SelectDocumentViewModel
 import space.byeolvit.of.ui.screen.settings.SettingsScreen
 import space.byeolvit.of.ui.screen.settings.SettingsViewModel
 import space.byeolvit.of.util.isUriPermissionValid
+
+// M3 Emphasized 이징
+private val EmphasizedDecelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+private val EmphasizedAccelerate = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
 
 @Composable
 fun OrbitalForestNavGraph(navController: NavHostController) {
@@ -66,7 +76,22 @@ fun OrbitalForestNavGraph(navController: NavHostController) {
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        enterTransition = {
+            fadeIn(tween(300, easing = EmphasizedDecelerate)) +
+            scaleIn(tween(300, easing = EmphasizedDecelerate), initialScale = 0.92f)
+        },
+        exitTransition = {
+            fadeOut(tween(200, easing = EmphasizedAccelerate))
+        },
+        popEnterTransition = {
+            fadeIn(tween(300, easing = EmphasizedDecelerate)) +
+            scaleIn(tween(300, easing = EmphasizedDecelerate), initialScale = 0.92f)
+        },
+        popExitTransition = {
+            fadeOut(tween(200, easing = EmphasizedAccelerate)) +
+            scaleOut(tween(200, easing = EmphasizedAccelerate), targetScale = 0.92f)
+        }
     ) {
         composable(Screen.Launch.route) {
             val vm: LaunchViewModel = viewModel(
@@ -97,9 +122,20 @@ fun OrbitalForestNavGraph(navController: NavHostController) {
             val vm: SelectDocumentViewModel = viewModel(
                 factory = SelectDocumentViewModel.Factory(settingsRepo, documentRepo)
             )
+            // Home 화면의 ViewModel 인스턴스를 직접 참조 — DataStore Flow 타이밍 문제 우회
+            val homeEntry = remember(navController) {
+                navController.getBackStackEntry(Screen.Home.route)
+            }
+            val homeVm: HomeViewModel = viewModel(
+                viewModelStoreOwner = homeEntry,
+                factory = HomeViewModel.Factory(settingsRepo, documentRepo)
+            )
             SelectDocumentScreen(
                 viewModel = vm,
-                onDocumentSelected = { navController.popBackStack() },
+                onDocumentSelected = { fileName ->
+                    homeVm.loadDocument(fileName)
+                    navController.popBackStack()
+                },
                 onBack = { navController.popBackStack() }
             )
         }

@@ -53,10 +53,11 @@ class SelectDocumentViewModel(
         }
     }
 
-    fun onDocumentSelected(fileName: String) {
+    fun onDocumentSelected(fileName: String, onNavigate: (String) -> Unit) {
         viewModelScope.launch {
             settingsRepository.setCurrentDocumentName(fileName)
             _uiState.update { it.copy(currentDocumentName = fileName) }
+            onNavigate(fileName)
         }
     }
 

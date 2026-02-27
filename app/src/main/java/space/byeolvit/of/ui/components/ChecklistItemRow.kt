@@ -2,7 +2,9 @@ package space.byeolvit.of.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,13 +16,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import space.byeolvit.of.data.model.ChecklistItem
 import space.byeolvit.of.util.parseInlineMarkdown
 
-private const val MAX_DISPLAY_DEPTH = 2
+private const val MAX_DISPLAY_DEPTH = 1
 private val INDENT_DP = 20.dp
+
+private val ErrorBg = Color(0xFF3B1A1A)
+private val ErrorText = Color(0xFFFF7474)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -29,20 +36,19 @@ fun ChecklistItemRow(
     depth: Int = 0,
     onChecked: (ChecklistItem, Boolean) -> Unit,
     onLongPress: (ChecklistItem) -> Unit,
+    onOpenFile: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (item.indentLevel > MAX_DISPLAY_DEPTH) {
-        ErrorChecklistItem(item = item)
-        return
-    }
-
     val itemBg = if (item.isChecked) {
         MaterialTheme.colorScheme.surfaceVariant
     } else {
         MaterialTheme.colorScheme.surface
     }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -71,30 +77,48 @@ fun ChecklistItemRow(
             )
         }
 
-        item.children.forEach { child ->
+        val validChildren = item.children.filter { it.indentLevel <= MAX_DISPLAY_DEPTH }
+        val hasErrorChildren = validChildren.size < item.children.size
+
+        validChildren.forEach { child ->
             ChecklistItemRow(
                 item = child,
                 depth = depth + 1,
                 onChecked = onChecked,
-                onLongPress = onLongPress
+                onLongPress = onLongPress,
+                onOpenFile = onOpenFile
             )
+        }
+
+        if (hasErrorChildren) {
+            ErrorChecklistItem(onOpenFile = onOpenFile)
         }
     }
 }
 
 @Composable
-private fun ErrorChecklistItem(item: ChecklistItem) {
+private fun ErrorChecklistItem(onOpenFile: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.errorContainer)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .background(ErrorBg)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "⚠ 들여쓰기가 너무 깊습니다: ${item.rawText}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onErrorContainer
+            text = "2단계 아래부터는 표시되지 않습니다.",
+            style = MaterialTheme.typography.labelMedium,
+            color = ErrorText,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "문서 열기",
+            style = MaterialTheme.typography.labelMedium.copy(
+                textDecoration = TextDecoration.Underline
+            ),
+            color = ErrorText,
+            modifier = Modifier.clickable { onOpenFile() }
         )
     }
 }

@@ -1,9 +1,11 @@
 package space.byeolvit.of.ui.screen.home
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +24,9 @@ data class SnackbarAction(val label: String, val action: () -> Unit)
 
 data class HomeUiState(
     val currentDocument: ParsedDocument? = null,
+    val appFolderUri: Uri? = null,
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val hideCompleted: Boolean = false,
     val hideNonChecklist: Boolean = false,
     val childInteraction: Boolean = true,
@@ -33,6 +37,7 @@ data class HomeUiState(
     val showAddField: Boolean = false,
     val addFieldText: String = "",
     val pendingChildParent: ChecklistItem? = null,
+    val pendingEditItem: ChecklistItem? = null,
     val snackbarMessage: String? = null,
     val snackbarAction: SnackbarAction? = null,
     val isNewDocDialogVisible: Boolean = false
@@ -46,16 +51,18 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var loadDocumentJob: Job? = null
+
     init {
+        // 표시 설정(필터링 옵션) 감지
         viewModelScope.launch {
             combine(
                 settingsRepository.hideCompleted,
                 settingsRepository.hideNonChecklist,
-                settingsRepository.childInteraction,
-                settingsRepository.currentDocumentName
-            ) { hideCompleted, hideNonChecklist, childInteraction, currentDocName ->
-                Quad(hideCompleted, hideNonChecklist, childInteraction, currentDocName)
-            }.collect { (hideCompleted, hideNonChecklist, childInteraction, currentDocName) ->
+                settingsRepository.childInteraction
+            ) { hideCompleted, hideNonChecklist, childInteraction ->
+                Triple(hideCompleted, hideNonChecklist, childInteraction)
+            }.collect { (hideCompleted, hideNonChecklist, childInteraction) ->
                 _uiState.update {
                     it.copy(
                         hideCompleted = hideCompleted,
@@ -63,20 +70,27 @@ class HomeViewModel(
                         childInteraction = childInteraction
                     )
                 }
-                if (currentDocName.isNotEmpty()) {
-                    loadDocument(currentDocName)
+            }
+        }
+
+        // 현재 문서 이름 변경 감지 — combine과 분리해 stale 중간값 문제 방지
+        viewModelScope.launch {
+            settingsRepository.currentDocumentName.collect { name ->
+                if (name.isNotEmpty()) {
+                    loadDocument(name)
                 }
             }
         }
     }
 
     fun loadDocument(fileName: String) {
-        viewModelScope.launch {
+        loadDocumentJob?.cancel()
+        loadDocumentJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val appFolderUri = settingsRepository.safAppFolderUri.filterNotNull().first()
                 val doc = documentRepository.readDocument(appFolderUri, fileName)
-                _uiState.update { it.copy(currentDocument = doc, isLoading = false) }
+                _uiState.update { it.copy(currentDocument = doc, appFolderUri = appFolderUri, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -107,14 +121,19 @@ class HomeViewModel(
         val doc = _uiState.value.currentDocument ?: return
         val parent = _uiState.value.pendingChildParent
 
-        val newItem = ChecklistItem(rawText = text.trim(), isChecked = false, indentLevel = if (parent != null) parent.indentLevel + 1 else 0)
+        val indentLevel = if (parent != null) parent.indentLevel + 1 else 0
+        val newItems = text.split("\n")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .map { ChecklistItem(rawText = it, isChecked = false, indentLevel = indentLevel) }
+        if (newItems.isEmpty()) return
 
         val updatedBlocks = if (parent != null) {
             doc.blocks.map { block ->
                 when (block) {
                     is DocumentBlock.ChecklistBlock -> {
                         DocumentBlock.ChecklistBlock(
-                            addChildToItem(block.items, parent.id, newItem)
+                            addChildrenToItem(block.items, parent.id, newItems)
                         )
                     }
                     else -> block
@@ -123,11 +142,11 @@ class HomeViewModel(
         } else {
             val lastChecklistIndex = doc.blocks.indexOfLast { it is DocumentBlock.ChecklistBlock }
             if (lastChecklistIndex == -1) {
-                doc.blocks + DocumentBlock.ChecklistBlock(listOf(newItem))
+                doc.blocks + DocumentBlock.ChecklistBlock(newItems)
             } else {
                 doc.blocks.mapIndexed { index, block ->
                     if (index == lastChecklistIndex && block is DocumentBlock.ChecklistBlock) {
-                        block.copy(items = block.items + newItem)
+                        block.copy(items = block.items + newItems)
                     } else block
                 }
             }
@@ -139,7 +158,8 @@ class HomeViewModel(
                 currentDocument = updatedDoc,
                 showAddField = false,
                 addFieldText = "",
-                pendingChildParent = null
+                pendingChildParent = null,
+                pendingEditItem = null
             )
         }
         saveCurrentDocument(updatedDoc)
@@ -195,6 +215,45 @@ class HomeViewModel(
         }
     }
 
+    fun onStartEditItem(item: ChecklistItem) {
+        _uiState.update {
+            it.copy(
+                showContextMenu = false,
+                contextMenuTarget = null,
+                showAddField = true,
+                addFieldText = item.rawText,
+                pendingEditItem = item
+            )
+        }
+    }
+
+    fun onEditItem(text: String) {
+        if (text.isBlank()) return
+        val doc = _uiState.value.currentDocument ?: return
+        val editItem = _uiState.value.pendingEditItem ?: return
+
+        val updatedBlocks = doc.blocks.map { block ->
+            when (block) {
+                is DocumentBlock.ChecklistBlock -> DocumentBlock.ChecklistBlock(
+                    updateItemTextInTree(block.items, editItem.id, text.trim())
+                )
+                else -> block
+            }
+        }
+        val updatedDoc = doc.copy(blocks = updatedBlocks)
+        _uiState.update {
+            it.copy(
+                currentDocument = updatedDoc,
+                showAddField = false,
+                addFieldText = "",
+                pendingEditItem = null,
+                snackbarMessage = "수정되었습니다.",
+                snackbarAction = null
+            )
+        }
+        saveCurrentDocument(updatedDoc)
+    }
+
     fun onAddFieldTextChanged(text: String) {
         _uiState.update { it.copy(addFieldText = text) }
     }
@@ -204,13 +263,30 @@ class HomeViewModel(
             it.copy(
                 showAddField = !it.showAddField,
                 addFieldText = "",
-                pendingChildParent = null
+                pendingChildParent = null,
+                pendingEditItem = null
             )
         }
     }
 
     fun onAddFieldDismiss() {
-        _uiState.update { it.copy(showAddField = false, addFieldText = "", pendingChildParent = null) }
+        _uiState.update {
+            it.copy(showAddField = false, addFieldText = "", pendingChildParent = null, pendingEditItem = null)
+        }
+    }
+
+    fun onRefresh() {
+        val currentDocName = _uiState.value.currentDocument?.fileName ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+            try {
+                val appFolderUri = settingsRepository.safAppFolderUri.filterNotNull().first()
+                val doc = documentRepository.readDocument(appFolderUri, currentDocName)
+                _uiState.update { it.copy(currentDocument = doc, appFolderUri = appFolderUri, isRefreshing = false) }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isRefreshing = false) }
+            }
+        }
     }
 
     fun onScrollChanged(isScrolled: Boolean) {
@@ -278,7 +354,14 @@ class HomeViewModel(
     }
 
     fun onNewDocumentCreated(fileName: String) {
-        _uiState.update { it.copy(isNewDocDialogVisible = false) }
+        _uiState.update {
+            it.copy(
+                isNewDocDialogVisible = false,
+                snackbarMessage = "새 문서를 생성했어요.",
+                snackbarAction = null
+            )
+        }
+        loadDocument(fileName)
         viewModelScope.launch {
             settingsRepository.setCurrentDocumentName(fileName)
         }
@@ -350,12 +433,22 @@ class HomeViewModel(
             .map { it.copy(children = removeItemFromTree(it.children, targetId)) }
     }
 
-    private fun addChildToItem(items: List<ChecklistItem>, parentId: String, newItem: ChecklistItem): List<ChecklistItem> {
+    private fun updateItemTextInTree(items: List<ChecklistItem>, targetId: String, newText: String): List<ChecklistItem> {
+        return items.map { item ->
+            when {
+                item.id == targetId -> item.copy(rawText = newText)
+                item.children.isNotEmpty() -> item.copy(children = updateItemTextInTree(item.children, targetId, newText))
+                else -> item
+            }
+        }
+    }
+
+    private fun addChildrenToItem(items: List<ChecklistItem>, parentId: String, newItems: List<ChecklistItem>): List<ChecklistItem> {
         return items.map { item ->
             if (item.id == parentId) {
-                item.copy(children = item.children + newItem)
+                item.copy(children = item.children + newItems)
             } else {
-                item.copy(children = addChildToItem(item.children, parentId, newItem))
+                item.copy(children = addChildrenToItem(item.children, parentId, newItems))
             }
         }
     }
@@ -370,5 +463,3 @@ class HomeViewModel(
         }
     }
 }
-
-private data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

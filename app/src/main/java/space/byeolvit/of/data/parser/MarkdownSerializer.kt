@@ -29,7 +29,7 @@ object MarkdownSerializer {
 
     private fun serializeItems(sb: StringBuilder, items: List<ChecklistItem>, depth: Int = 0) {
         items.forEachIndexed { index, item ->
-            val indent = "  ".repeat(depth)
+            val indent = "\t".repeat(depth)
             val check = if (item.isChecked) "x" else " "
             sb.append("$indent- [$check] ${item.rawText}")
 

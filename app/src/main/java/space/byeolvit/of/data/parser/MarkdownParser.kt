@@ -39,8 +39,7 @@ object MarkdownParser {
             val match = CHECKLIST_REGEX.matchEntire(line)
             if (match != null) {
                 flushMemo()
-                val rawIndent = match.groupValues[1].length
-                val indent = rawIndent / 2
+                val indent = countIndent(match.groupValues[1])
                 checklistBuffer.add(
                     RawChecklistLine(
                         indent = indent,
@@ -58,6 +57,14 @@ object MarkdownParser {
         flushMemo()
 
         return ParsedDocument(fileName, blocks)
+    }
+
+    private fun countIndent(prefix: String): Int {
+        return if (prefix.contains('\t')) {
+            prefix.count { it == '\t' }
+        } else {
+            prefix.length / 2
+        }
     }
 
     private fun buildTree(lines: List<RawChecklistLine>): List<ChecklistItem> {

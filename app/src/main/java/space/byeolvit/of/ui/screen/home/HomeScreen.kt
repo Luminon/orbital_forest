@@ -3,6 +3,8 @@ package space.byeolvit.of.ui.screen.home
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import androidx.documentfile.provider.DocumentFile
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -34,6 +36,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.res.painterResource
 import space.byeolvit.of.R
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -46,8 +52,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,6 +67,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import space.byeolvit.of.data.model.ChecklistItem
 import space.byeolvit.of.data.model.DocumentBlock
@@ -68,9 +80,7 @@ import space.byeolvit.of.ui.components.ContextMenuSheet
 import space.byeolvit.of.ui.components.DocumentMenuSheet
 import space.byeolvit.of.ui.components.DocumentNameChip
 import space.byeolvit.of.ui.components.MemoBlock
-import space.byeolvit.of.ui.components.bottomFadeBrush
-import space.byeolvit.of.ui.components.fadingEdge
-import space.byeolvit.of.ui.components.topFadeBrush
+import space.byeolvit.of.ui.components.fadingEdges
 import space.byeolvit.of.ui.screen.home.newdoc.NewDocumentDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,6 +100,8 @@ fun HomeScreen(
             listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
         }
     }
+    val canScrollUp by remember { derivedStateOf { listState.canScrollBackward } }
+    val canScrollDown by remember { derivedStateOf { listState.canScrollForward } }
 
     LaunchedEffect(isScrolled) {
         viewModel.onScrollChanged(isScrolled)
@@ -114,41 +126,45 @@ fun HomeScreen(
     }
 
     Scaffold(
-        topBar = {
-            AnimatedVisibility(
-                visible = !uiState.isScrolled,
-                enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
-            ) {
-                TopAppBar(
-                    title = {
-                        uiState.currentDocument?.let {
-                            DocumentNameChip(fileName = it.fileName)
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { viewModel.onDocumentMenuOpen() }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_documents),
-                                contentDescription = "문서 정보"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+    ) { _ ->
+        val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val appBarHeight = statusBarTop + 60.dp // 10dp(top) + 40dp(content) + 10dp(bottom)
+
+        val pullRefreshState = rememberPullToRefreshState()
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = { viewModel.onRefresh() },
+            state = pullRefreshState,
+            modifier = Modifier.fillMaxSize(),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullRefreshState,
+                    isRefreshing = uiState.isRefreshing,
+                    color = MaterialTheme.colorScheme.primary,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = appBarHeight)
+                )
+            }
+        ) {
+            // 배경 글로우 효과 (Figma: Background Effect — bottom center radial glow)
+            val glowColor = MaterialTheme.colorScheme.primary
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            glowColor.copy(alpha = 0.18f),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width / 2f, size.height + 22.dp.toPx()),
+                        radius = size.width * 0.74f
                     )
                 )
             }
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+
             val doc = uiState.currentDocument
 
             if (doc == null) {
@@ -176,14 +192,13 @@ fun HomeScreen(
                         contentPadding = PaddingValues(
                             start = 24.dp,
                             end = 24.dp,
-                            top = 16.dp,
+                            top = appBarHeight + 16.dp,
                             bottom = 120.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier
                             .fillMaxSize()
-                            .fadingEdge(topFadeBrush)
-                            .fadingEdge(bottomFadeBrush)
+                            .fadingEdges(showTop = canScrollUp, showBottom = canScrollDown)
                     ) {
                         visibleBlocks.forEachIndexed { blockIdx, block ->
                             when (block) {
@@ -197,7 +212,21 @@ fun HomeScreen(
                                             ChecklistGroupCard(
                                                 items = displayItems,
                                                 onChecked = { i, checked -> viewModel.onCheckItem(i, checked) },
-                                                onLongPress = { viewModel.onContextMenuOpen(it) }
+                                                onLongPress = { viewModel.onContextMenuOpen(it) },
+                                                onOpenFile = {
+                                                    val folderUri = uiState.appFolderUri
+                                                    val fileName = uiState.currentDocument?.fileName
+                                                    if (folderUri != null && fileName != null) {
+                                                        val file = DocumentFile.fromTreeUri(context, folderUri)?.findFile(fileName)
+                                                        if (file != null) {
+                                                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                                                setDataAndType(file.uri, "text/plain")
+                                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                            }
+                                                            try { context.startActivity(intent) } catch (_: Exception) { }
+                                                        }
+                                                    }
+                                                }
                                             )
                                         }
                                     }
@@ -213,6 +242,46 @@ fun HomeScreen(
                 }
             }
 
+            // 상단 앱바 오버레이
+            AnimatedVisibility(
+                visible = !uiState.isScrolled && doc != null,
+                enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+                modifier = Modifier.align(Alignment.TopCenter)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .padding(horizontal = 24.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        uiState.currentDocument?.let {
+                            DocumentNameChip(fileName = it.fileName)
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Surface(
+                        onClick = { viewModel.onDocumentMenuOpen() },
+                        shape = RoundedCornerShape(999.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.size(width = 72.dp, height = 40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_logo_of),
+                                contentDescription = "문서 정보",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             // 하단 입력 필드 (HME_10 / HME_09)
             AnimatedVisibility(
                 visible = uiState.showAddField,
@@ -223,8 +292,15 @@ fun HomeScreen(
                 AddItemField(
                     text = uiState.addFieldText,
                     parentName = uiState.pendingChildParent?.rawText,
+                    editingItemText = uiState.pendingEditItem?.rawText,
                     onTextChanged = { viewModel.onAddFieldTextChanged(it) },
-                    onAdd = { viewModel.onAddItem(uiState.addFieldText) },
+                    onAdd = {
+                        if (uiState.pendingEditItem != null) {
+                            viewModel.onEditItem(uiState.addFieldText)
+                        } else {
+                            viewModel.onAddItem(uiState.addFieldText)
+                        }
+                    },
                     onDismiss = { viewModel.onAddFieldDismiss() }
                 )
             }
@@ -237,9 +313,9 @@ fun HomeScreen(
                     .navigationBarsPadding()
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
-                // 툴바 (스크롤 시 또는 입력 필드 표시 시 숨김)
+                // 툴바 (스크롤 시, 입력 필드 표시 시, 문서 없을 시 숨김)
                 AnimatedVisibility(
-                    visible = !uiState.isScrolled && !uiState.showAddField,
+                    visible = !uiState.isScrolled && !uiState.showAddField && doc != null,
                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                     modifier = Modifier.align(Alignment.BottomStart)
@@ -251,16 +327,35 @@ fun HomeScreen(
                     )
                 }
 
-                // FAB (입력 필드 표시 시만 숨김, 스크롤 시에도 유지)
+                // FAB (입력 필드 표시 시 숨김, 문서 없을 시 숨김)
                 AnimatedVisibility(
-                    visible = !uiState.showAddField,
+                    visible = !uiState.showAddField && doc != null,
                     enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                     exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                     modifier = Modifier.align(Alignment.BottomEnd)
                 ) {
                     LargeAddFab(onClick = { viewModel.onAddFieldToggle() })
                 }
+
+                // Extended FAB (문서 없을 때만 표시)
+                AnimatedVisibility(
+                    visible = doc == null,
+                    enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    LargeExtendedAddFab(onClick = { viewModel.onShowNewDocDialog() })
+                }
             }
+
+            // Snackbar — 하단 컨트롤(FAB 80dp + 상하 패딩 16dp+16dp) 위에 표시
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(start = 34.dp, end = 34.dp, bottom = 112.dp)
+            )
         }
     }
 
@@ -276,6 +371,7 @@ fun HomeScreen(
                 clipboard.setPrimaryClip(clip)
                 viewModel.onCopyItem(uiState.contextMenuTarget!!)
             },
+            onEdit = { viewModel.onStartEditItem(uiState.contextMenuTarget!!) },
             onAddChild = { viewModel.onStartAddChildItem(uiState.contextMenuTarget!!) }
         )
     }
@@ -311,7 +407,8 @@ fun HomeScreen(
 private fun ChecklistGroupCard(
     items: List<ChecklistItem>,
     onChecked: (ChecklistItem, Boolean) -> Unit,
-    onLongPress: (ChecklistItem) -> Unit
+    onLongPress: (ChecklistItem) -> Unit,
+    onOpenFile: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -327,7 +424,8 @@ private fun ChecklistGroupCard(
                     item = item,
                     depth = 0,
                     onChecked = onChecked,
-                    onLongPress = onLongPress
+                    onLongPress = onLongPress,
+                    onOpenFile = onOpenFile
                 )
             }
         }
@@ -410,6 +508,37 @@ private fun LargeAddFab(onClick: () -> Unit) {
 }
 
 // ──────────────────────────────────────────────
+// Extended FAB — 문서 없을 때 (HME_15)
+// ──────────────────────────────────────────────
+
+@Composable
+private fun LargeExtendedAddFab(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.height(80.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 26.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_file_add),
+                contentDescription = null,
+                modifier = Modifier.size(28.dp)
+            )
+            Text(
+                text = "새 문서 추가",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+    }
+}
+
+// ──────────────────────────────────────────────
 // 빈 화면 뷰
 // ──────────────────────────────────────────────
 
@@ -420,16 +549,18 @@ private fun EmptyDocumentView(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "문서가 없습니다",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        Icon(
+            painter = painterResource(R.drawable.ic_empty),
+            contentDescription = null,
+            tint = Color(0xFF252533),
+            modifier = Modifier.size(156.dp)
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "아래 + 버튼으로 새 문서를 만들어보세요",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "새로운 문서를 추가해야 할일을 만들 수 있어요.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color(0xFF65658A),
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -441,10 +572,18 @@ private fun EmptyChecklistView(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_empty),
+            contentDescription = null,
+            tint = Color(0xFF252533),
+            modifier = Modifier.size(156.dp)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "새로운 할일을 추가해보세요",
+            text = "새로운 할일을 추가해보세요.",
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color(0xFF65658A),
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -457,6 +596,7 @@ private fun EmptyChecklistView(modifier: Modifier = Modifier) {
 private fun AddItemField(
     text: String,
     parentName: String?,
+    editingItemText: String?,
     onTextChanged: (String) -> Unit,
     onAdd: () -> Unit,
     onDismiss: () -> Unit
@@ -477,20 +617,16 @@ private fun AddItemField(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (parentName != null) {
-                Text(
-                    text = "하위 항목 작성중 · $parentName",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
+            // 입력 Row
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp)
             ) {
                 BasicTextField(
                     value = text,
@@ -503,6 +639,7 @@ private fun AddItemField(
                     keyboardActions = KeyboardActions.Default,
                     modifier = Modifier
                         .weight(1f)
+                        .align(Alignment.CenterVertically)
                         .focusRequester(focusRequester),
                     decorationBox = { innerTextField ->
                         Box {
@@ -525,11 +662,49 @@ private fun AddItemField(
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_plus),
-                        contentDescription = "추가",
+                        painter = painterResource(
+                            if (editingItemText != null) R.drawable.ic_check else R.drawable.ic_plus
+                        ),
+                        contentDescription = if (editingItemText != null) "수정 완료" else "추가",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp)
                     )
+                }
+            }
+
+            // 상태 바: 하위 항목(HME_09) 또는 수정 모드(HME_09A)
+            val statusLabel = when {
+                editingItemText != null -> "수정중"
+                parentName != null -> "하위 항목 작성중"
+                else -> null
+            }
+            val statusValue = editingItemText ?: parentName
+            if (statusLabel != null && statusValue != null) {
+                Surface(
+                    shape = RoundedCornerShape(99.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = statusLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = statusValue,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }

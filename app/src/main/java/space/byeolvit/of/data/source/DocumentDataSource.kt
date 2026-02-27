@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.webkit.MimeTypeMap
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -48,7 +49,7 @@ class DocumentDataSource(private val context: Context) {
     suspend fun writeFile(appFolderUri: Uri, fileName: String, content: String) = withContext(Dispatchers.IO) {
         val folder = DocumentFile.fromTreeUri(context, appFolderUri)
             ?: error("앱 폴더를 열 수 없습니다.")
-        val file = folder.findFile(fileName) ?: folder.createFile("text/markdown", fileName)
+        val file = folder.findFile(fileName) ?: folder.createFile(mimeTypeFor(fileName), fileName)
             ?: error("파일을 생성할 수 없습니다: $fileName")
         contentResolver.openOutputStream(file.uri, "wt")?.use { stream ->
             stream.bufferedWriter().use { it.write(content) }
@@ -60,7 +61,7 @@ class DocumentDataSource(private val context: Context) {
             ?: error("앱 폴더를 열 수 없습니다.")
         val existing = folder.findFile(fileName)
         if (existing != null) return@withContext existing.uri
-        val created = folder.createFile("text/markdown", fileName)
+        val created = folder.createFile(mimeTypeFor(fileName), fileName)
             ?: error("파일을 생성할 수 없습니다: $fileName")
         created.uri
     }
@@ -75,11 +76,10 @@ class DocumentDataSource(private val context: Context) {
         val folder = DocumentFile.fromTreeUri(context, appFolderUri)
             ?: error("앱 폴더를 열 수 없습니다.")
         val file = folder.findFile(oldName) ?: error("파일을 찾을 수 없습니다: $oldName")
-        val nameWithoutExt = newName.removeSuffix(".md")
-        file.renameTo(nameWithoutExt)
+        file.renameTo(newName)
         // DocumentFile.renameTo 이후 실제 파일명 확인
-        val renamed = folder.findFile("$nameWithoutExt.md")
-            ?: folder.findFile(nameWithoutExt)
+        val renamed = folder.findFile(newName)
+            ?: folder.findFile(newName.removeSuffix(".md"))
         renamed?.name ?: newName
     }
 
@@ -99,5 +99,15 @@ class DocumentDataSource(private val context: Context) {
 
     companion object {
         const val APP_FOLDER_NAME = "OrbitalForest"
+
+        /** 파일명의 확장자에 맞는 MIME 타입을 반환. 기기 MimeTypeMap에서 동적 조회하므로
+         *  `.md` → `text/markdown`(Android 10+) 또는 기기별 매핑값을 정확히 반환한다.
+         *  매핑이 없으면 `text/plain` 사용. */
+        private fun mimeTypeFor(fileName: String): String {
+            val ext = fileName.substringAfterLast(".", "")
+            return if (ext.isNotEmpty()) {
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "text/plain"
+            } else "text/plain"
+        }
     }
 }

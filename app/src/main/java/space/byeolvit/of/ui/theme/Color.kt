@@ -35,9 +35,9 @@ val OnErrorContainer = Color(0xFFF9DEDC)
 
 val Outline = Color(0xFF938F99)
 val OutlineVariant = Color(0xFF49454F)
-val InverseSurface = Color(0xFFE6E1E5)
-val InverseOnSurface = Color(0xFF313033)
-val InversePrimary = Color(0xFF6750A4)
+val InverseSurface = Color(0xFF424259)  // Snackbar 배경
+val InverseOnSurface = Color(0xFFFFFFFF) // Snackbar 텍스트
+val InversePrimary = Color(0xFFBDC2FF)  // Snackbar 액션 버튼
 val Scrim = Color(0xFF000000)
 val SurfaceTint = Primary
 
