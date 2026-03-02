@@ -118,12 +118,12 @@ fun OrbitalForestNavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.SelectDocument.route) {
+        composable(Screen.SelectDocument.route) { backStackEntry ->
             val vm: SelectDocumentViewModel = viewModel(
                 factory = SelectDocumentViewModel.Factory(settingsRepo, documentRepo)
             )
             // Home 화면의 ViewModel 인스턴스를 직접 참조 — DataStore Flow 타이밍 문제 우회
-            val homeEntry = remember(navController) {
+            val homeEntry = remember(backStackEntry) {
                 navController.getBackStackEntry(Screen.Home.route)
             }
             val homeVm: HomeViewModel = viewModel(
