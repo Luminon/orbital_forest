@@ -43,7 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import space.byeolvit.of.R
 
-private const val AI_FOOTPRINT_URL = "https://example.com/ai-footprint"
+private const val AI_FOOTPRINT_URL = "https://github.com/Luminon/orbital_forest/blob/primary/ai_footprint.md"
 
 @Composable
 fun SettingsScreen(
