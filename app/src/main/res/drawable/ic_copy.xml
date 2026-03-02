@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 복사 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16 11C16.5523 11 17 11.4477 17 12C17 12.5523 16.5523 13 16 13H12C11.4477 13 11 12.5523 11 12C11 11.4477 11.4477 11 12 11H16Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18 8C18.5523 8 19 8.44772 19 9C19 9.55229 18.5523 10 18 10H12C11.4477 10 11 9.55229 11 9C11 8.44772 11.4477 8 12 8H18Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18 5C18.5523 5 19 5.44772 19 6C19 6.55228 18.5523 7 18 7H12C11.4477 7 11 6.55228 11 6C11 5.44772 11.4477 5 12 5H18Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M20 1C21.6569 1 23 2.34315 23 4V16C23 17.6569 21.6569 19 20 19H17V20C17 21.6569 15.6569 23 14 23H4C2.34315 23 1 21.6569 1 20V8C1 6.34315 2.34315 5 4 5H7V4C7 2.34315 8.34315 1 10 1H20ZM4 7C3.44772 7 3 7.44772 3 8V20C3 20.5523 3.44772 21 4 21H14C14.5523 21 15 20.5523 15 20V19H10C8.34315 19 7 17.6569 7 16V7H4ZM10 3C9.44772 3 9 3.44772 9 4V16C9 16.5523 9.44772 17 10 17H20C20.5523 17 21 16.5523 21 16V4C21 3.44772 20.5523 3 20 3H10Z" />
+</vector>
