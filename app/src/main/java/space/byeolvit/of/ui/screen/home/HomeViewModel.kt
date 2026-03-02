@@ -14,13 +14,15 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import space.byeolvit.of.R
 import space.byeolvit.of.data.model.ChecklistItem
 import space.byeolvit.of.data.model.DocumentBlock
 import space.byeolvit.of.data.model.ParsedDocument
 import space.byeolvit.of.data.repository.DocumentRepository
 import space.byeolvit.of.data.repository.SettingsRepository
+import space.byeolvit.of.util.UiText
 
-data class SnackbarAction(val label: String, val action: () -> Unit)
+data class SnackbarAction(val label: UiText, val action: () -> Unit)
 
 data class HomeUiState(
     val currentDocument: ParsedDocument? = null,
@@ -38,7 +40,7 @@ data class HomeUiState(
     val addFieldText: String = "",
     val pendingChildParent: ChecklistItem? = null,
     val pendingEditItem: ChecklistItem? = null,
-    val snackbarMessage: String? = null,
+    val snackbarMessage: UiText? = null,
     val snackbarAction: SnackbarAction? = null,
     val isNewDocDialogVisible: Boolean = false
 )
@@ -78,6 +80,8 @@ class HomeViewModel(
             settingsRepository.currentDocumentName.collect { name ->
                 if (name.isNotEmpty()) {
                     loadDocument(name)
+                } else {
+                    _uiState.update { it.copy(currentDocument = null) }
                 }
             }
         }
@@ -183,8 +187,8 @@ class HomeViewModel(
                 currentDocument = updatedDoc,
                 showContextMenu = false,
                 contextMenuTarget = null,
-                snackbarMessage = "항목을 삭제했습니다.",
-                snackbarAction = SnackbarAction("실행 취소") {
+                snackbarMessage = UiText.StringResource(R.string.snack_item_deleted),
+                snackbarAction = SnackbarAction(UiText.StringResource(R.string.snack_undo)) {
                     _uiState.update { s -> s.copy(currentDocument = doc, snackbarMessage = null, snackbarAction = null) }
                     saveCurrentDocument(doc)
                 }
@@ -198,7 +202,7 @@ class HomeViewModel(
             it.copy(
                 showContextMenu = false,
                 contextMenuTarget = null,
-                snackbarMessage = "클립보드에 복사했습니다.",
+                snackbarMessage = UiText.StringResource(R.string.snack_copied),
                 snackbarAction = null
             )
         }
@@ -247,7 +251,7 @@ class HomeViewModel(
                 showAddField = false,
                 addFieldText = "",
                 pendingEditItem = null,
-                snackbarMessage = "수정되었습니다.",
+                snackbarMessage = UiText.StringResource(R.string.snack_edited),
                 snackbarAction = null
             )
         }
@@ -320,12 +324,12 @@ class HomeViewModel(
                 _uiState.update {
                     it.copy(
                         currentDocument = doc.copy(fileName = actualName),
-                        snackbarMessage = "이름이 변경되었습니다.",
+                        snackbarMessage = UiText.StringResource(R.string.snack_renamed),
                         snackbarAction = null
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(snackbarMessage = "이름 변경에 실패했습니다.") }
+                _uiState.update { it.copy(snackbarMessage = UiText.StringResource(R.string.snack_rename_failed)) }
             }
         }
     }
@@ -340,15 +344,15 @@ class HomeViewModel(
                 _uiState.update { it.copy(showDocumentMenu = false) }
                 if (remaining.isEmpty()) {
                     settingsRepository.setCurrentDocumentName("")
-                    _uiState.update { it.copy(currentDocument = null, snackbarMessage = "문서를 삭제했습니다.") }
+                    _uiState.update { it.copy(currentDocument = null, snackbarMessage = UiText.StringResource(R.string.snack_doc_deleted)) }
                     onNoDocuments()
                 } else {
-                    _uiState.update { it.copy(snackbarMessage = "문서를 삭제했습니다.") }
+                    _uiState.update { it.copy(snackbarMessage = UiText.StringResource(R.string.snack_doc_deleted)) }
                     settingsRepository.setCurrentDocumentName(remaining[0].fileName)
                     // init flow will call loadDocument(remaining[0].fileName)
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(snackbarMessage = "문서 삭제에 실패했습니다.") }
+                _uiState.update { it.copy(snackbarMessage = UiText.StringResource(R.string.snack_doc_delete_failed)) }
             }
         }
     }
@@ -357,7 +361,7 @@ class HomeViewModel(
         _uiState.update {
             it.copy(
                 isNewDocDialogVisible = false,
-                snackbarMessage = "새 문서를 생성했어요.",
+                snackbarMessage = UiText.StringResource(R.string.snack_doc_created),
                 snackbarAction = null
             )
         }

@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -125,7 +126,7 @@ private fun BrandScreen(
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = "시작하기",
+                    text = stringResource(R.string.btn_start),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -139,8 +140,8 @@ private fun BrandScreen(
 @Composable
 private fun AiFootprintNotice(onLinkClick: () -> Unit) {
     val primaryHalfAlpha = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-    val fullText = "본 어플리케이션은 개발 일부에 AI를 활용했습니다. 사용 이전에 AI Footprint 보고서로 내용을 검토할 수 있습니다."
-    val linkText = "AI Footprint 보고서"
+    val fullText = stringResource(R.string.ai_footprint_notice)
+    val linkText = stringResource(R.string.ai_footprint_link)
     val startIndex = fullText.indexOf(linkText)
     val endIndex = startIndex + linkText.length
 
@@ -238,12 +239,12 @@ private fun FolderSelectScreen(
                             .padding(vertical = 12.dp)
                     ) {
                         Text(
-                            text = "저장 위치 설정",
+                            text = stringResource(R.string.folder_select_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = ".md 문서를 저장할 위치를 설정합니다. 선택한 폴더 하위에 \"Orbital Forest\" 폴더를 만듭니다.",
+                            text = stringResource(R.string.folder_select_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFB2B2D6)
                         )

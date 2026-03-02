@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import space.byeolvit.of.R
@@ -84,7 +85,7 @@ fun ContextMenuSheet(
                     )
                     Icon(
                         painter = painterResource(R.drawable.ic_copy),
-                        contentDescription = "복사",
+                        contentDescription = stringResource(R.string.cd_copy),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .size(24.dp)
@@ -101,7 +102,7 @@ fun ContextMenuSheet(
             ) {
                 ContextMenuButton(
                     iconRes = R.drawable.ic_bin,
-                    label = "삭제",
+                    label = stringResource(R.string.delete_action),
                     onClick = { onDelete(); onDismiss() },
                     modifier = Modifier.weight(1f)
                 )
@@ -113,7 +114,7 @@ fun ContextMenuSheet(
                 )
                 ContextMenuButton(
                     iconRes = R.drawable.ic_pencil,
-                    label = "수정",
+                    label = stringResource(R.string.edit_action),
                     onClick = { onEdit() },
                     modifier = Modifier.weight(1f)
                 )
@@ -125,7 +126,7 @@ fun ContextMenuSheet(
                 )
                 ContextMenuButton(
                     iconRes = R.drawable.ic_add,
-                    label = "하위 항목",
+                    label = stringResource(R.string.child_item_action),
                     onClick = { onAddChild() },
                     enabled = !isSubItem,
                     modifier = Modifier.weight(1f)

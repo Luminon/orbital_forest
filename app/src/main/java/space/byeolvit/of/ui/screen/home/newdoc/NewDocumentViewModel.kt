@@ -10,13 +10,15 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import space.byeolvit.of.R
 import space.byeolvit.of.data.repository.DocumentRepository
 import space.byeolvit.of.data.repository.SettingsRepository
+import space.byeolvit.of.util.UiText
 
 data class NewDocumentUiState(
     val nameText: String = "",
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: UiText? = null
 )
 
 class NewDocumentViewModel(
@@ -27,14 +29,14 @@ class NewDocumentViewModel(
     private val _uiState = MutableStateFlow(NewDocumentUiState())
     val uiState: StateFlow<NewDocumentUiState> = _uiState.asStateFlow()
 
-    fun loadDefaultName() {
+    fun loadDefaultName(baseName: String) {
         viewModelScope.launch {
             try {
                 val appFolderUri = settingsRepository.safAppFolderUri.filterNotNull().first()
-                val defaultName = documentRepository.generateUniqueName(appFolderUri, "내 할일")
+                val defaultName = documentRepository.generateUniqueName(appFolderUri, baseName)
                 _uiState.update { it.copy(nameText = defaultName.removeSuffix(".md")) }
             } catch (_: Exception) {
-                _uiState.update { it.copy(nameText = "내 할일") }
+                _uiState.update { it.copy(nameText = baseName) }
             }
         }
     }
@@ -54,7 +56,7 @@ class NewDocumentViewModel(
                 val fileName = if (nameText.endsWith(".md")) nameText else "$nameText.md"
 
                 if (documentRepository.documentExists(appFolderUri, fileName)) {
-                    _uiState.update { it.copy(isLoading = false, error = "같은 이름의 문서가 이미 있습니다.") }
+                    _uiState.update { it.copy(isLoading = false, error = UiText.StringResource(R.string.error_doc_exists)) }
                     return@launch
                 }
 
@@ -63,7 +65,7 @@ class NewDocumentViewModel(
                 _uiState.update { it.copy(isLoading = false) }
                 onSuccess(fileName)
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "문서 생성에 실패했습니다.") }
+                _uiState.update { it.copy(isLoading = false, error = UiText.StringResource(R.string.error_doc_create_failed)) }
             }
         }
     }

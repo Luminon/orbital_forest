@@ -12,7 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import space.byeolvit.of.R
+import space.byeolvit.of.util.UiText
 import space.byeolvit.of.OrbitalForestApp
 import space.byeolvit.of.data.repository.DocumentRepository
 import space.byeolvit.of.data.repository.DocumentRepositoryImpl
@@ -42,22 +45,24 @@ fun NewDocumentDialog(
     val uiState by vm.uiState.collectAsState()
     val focusRequester = androidx.compose.runtime.remember { FocusRequester() }
 
+    val defaultDocName = stringResource(R.string.default_doc_name)
+
     LaunchedEffect(Unit) {
-        vm.loadDefaultName()
+        vm.loadDefaultName(defaultDocName)
         focusRequester.requestFocus()
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("새 문서 만들기") },
+        title = { Text(stringResource(R.string.new_doc_dialog_title)) },
         text = {
             OutlinedTextField(
                 value = uiState.nameText,
                 onValueChange = { vm.onNameChanged(it) },
-                label = { Text("문서 이름") },
+                label = { Text(stringResource(R.string.doc_name_label)) },
                 singleLine = true,
                 isError = uiState.error != null,
-                supportingText = uiState.error?.let { { Text(it) } },
+                supportingText = uiState.error?.let { err -> { Text(err.asString()) } },
                 modifier = Modifier.focusRequester(focusRequester)
             )
         },
@@ -66,12 +71,12 @@ fun NewDocumentDialog(
                 onClick = { vm.onCreate { fileName -> onCreated(fileName) } },
                 enabled = uiState.nameText.isNotBlank() && !uiState.isLoading
             ) {
-                Text("만들기")
+                Text(stringResource(R.string.btn_create))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("취소")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

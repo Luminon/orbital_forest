@@ -39,7 +39,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import space.byeolvit.of.R
 
@@ -106,14 +108,14 @@ fun SettingsScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "뒤로",
+                                contentDescription = stringResource(R.string.cd_back),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
                 Text(
-                    text = "설정",
+                    text = stringResource(R.string.settings_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -147,7 +149,7 @@ fun SettingsScreen(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.img_wordmark),
-                        contentDescription = "궤도의 숲",
+                        contentDescription = stringResource(R.string.cd_wordmark),
                         modifier = Modifier.size(width = 114.dp, height = 28.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -157,9 +159,10 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
                 ) {
                     Text(
-                        text = "흩뜨러진 뭇별은 하나를 바라보는 고리가 되니.",
+                        text = stringResource(R.string.tagline),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -182,24 +185,24 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     SettingsActionItem(
-                        title = "저장 위치 변경",
-                        description = ".md 문서를 저장할 위치를 변경합니다.",
+                        title = stringResource(R.string.settings_storage_change),
+                        description = stringResource(R.string.settings_storage_change_desc),
                         onClick = { folderPickerLauncher.launch(null) }
                     )
                     SettingsToggleItem(
-                        title = "완료한 항목 숨기기",
+                        title = stringResource(R.string.settings_hide_completed),
                         checked = uiState.hideCompleted,
                         onCheckedChange = { viewModel.onHideCompletedChanged(it) }
                     )
                     SettingsToggleItem(
-                        title = "체크리스트 이외 항목 숨기기",
-                        description = "문서에 체크리스트 외 텍스트가 작성되어 있더라도, 목록에서 보여주지 않습니다.",
+                        title = stringResource(R.string.settings_hide_non_checklist),
+                        description = stringResource(R.string.settings_hide_non_checklist_desc),
                         checked = uiState.hideNonChecklist,
                         onCheckedChange = { viewModel.onHideNonChecklistChanged(it) }
                     )
                     SettingsToggleItem(
-                        title = "하위 항목 상호작용",
-                        description = "하위 항목을 모두 체크하면 상위 항목도 같이 체크됩니다.",
+                        title = stringResource(R.string.settings_child_interaction),
+                        description = stringResource(R.string.settings_child_interaction_desc),
                         checked = uiState.childInteraction,
                         onCheckedChange = { viewModel.onChildInteractionChanged(it) }
                     )
@@ -212,8 +215,8 @@ fun SettingsScreen(
                         .clip(RoundedCornerShape(16.dp)),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    SettingsInfoItem(label = "버전", value = uiState.appVersion)
-                    SettingsInfoItem(label = "디자인", value = "Luminon Canoness")
+                    SettingsInfoItem(label = stringResource(R.string.settings_version), value = uiState.appVersion)
+                    SettingsInfoItem(label = stringResource(R.string.settings_designer), value = "Luminon Canoness")
                     AiFootprintItem(onClick = { uriHandler.openUri(AI_FOOTPRINT_URL) })
                 }
             }
@@ -348,19 +351,19 @@ private fun AiFootprintItem(onClick: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = "AI Footprint",
+                text = stringResource(R.string.ai_footprint_title),
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "본 어플리케이션에서 AI가 활용된 부분을 표시합니다. 전체 내용은 AI Footprint 보고서를 참고해주세요.\n• 서비스 기획 : 일부 AI가 활용됨\n• 서비스 디자인 : AI를 사용하지 않음\n• 서비스 개발 (Android App) : 전부 AI가 활용됨",
+                text = stringResource(R.string.ai_footprint_desc),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                 color = Color(0xFFB2B2D6)
             )
         }
         Icon(
             painter = painterResource(R.drawable.ic_external),
-            contentDescription = "외부 링크",
+            contentDescription = stringResource(R.string.cd_external_link),
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp)
         )

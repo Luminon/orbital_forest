@@ -66,7 +66,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import space.byeolvit.of.util.UiText
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -107,12 +109,15 @@ fun HomeScreen(
         viewModel.onScrollChanged(isScrolled)
     }
 
-    LaunchedEffect(uiState.snackbarMessage) {
-        val msg = uiState.snackbarMessage ?: return@LaunchedEffect
+    val snackbarMessageStr = uiState.snackbarMessage?.asString()
+    val snackbarActionLabelStr = uiState.snackbarAction?.label?.asString()
+
+    LaunchedEffect(snackbarMessageStr) {
+        val msg = snackbarMessageStr ?: return@LaunchedEffect
         val action = uiState.snackbarAction
         val result = snackbarHostState.showSnackbar(
             message = msg,
-            actionLabel = action?.label,
+            actionLabel = snackbarActionLabelStr,
             duration = SnackbarDuration.Short
         )
         if (result == SnackbarResult.ActionPerformed) {
@@ -273,7 +278,7 @@ fun HomeScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_logo_of),
-                                contentDescription = "문서 정보",
+                                contentDescription = stringResource(R.string.cd_doc_info),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
@@ -458,7 +463,7 @@ private fun ToolbarPill(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_add),
-                    contentDescription = "문서 생성",
+                    contentDescription = stringResource(R.string.cd_new_doc),
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
@@ -468,7 +473,7 @@ private fun ToolbarPill(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_doc_lists),
-                    contentDescription = "문서 선택",
+                    contentDescription = stringResource(R.string.cd_select_doc),
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
@@ -478,7 +483,7 @@ private fun ToolbarPill(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),
-                    contentDescription = "설정",
+                    contentDescription = stringResource(R.string.cd_settings),
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
@@ -501,7 +506,7 @@ private fun LargeAddFab(onClick: () -> Unit) {
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_plus),
-            contentDescription = "체크리스트 추가",
+            contentDescription = stringResource(R.string.cd_add_item),
             modifier = Modifier.size(28.dp)
         )
     }
@@ -531,7 +536,7 @@ private fun LargeExtendedAddFab(onClick: () -> Unit) {
                 modifier = Modifier.size(28.dp)
             )
             Text(
-                text = "새 문서 추가",
+                text = stringResource(R.string.lbl_new_doc_fab),
                 style = MaterialTheme.typography.titleLarge
             )
         }
@@ -557,7 +562,7 @@ private fun EmptyDocumentView(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "새로운 문서를 추가해야 할일을 만들 수 있어요.",
+            text = stringResource(R.string.empty_document_msg),
             style = MaterialTheme.typography.bodyLarge,
             color = Color(0xFF65658A),
             textAlign = TextAlign.Center
@@ -580,7 +585,7 @@ private fun EmptyChecklistView(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "새로운 할일을 추가해보세요.",
+            text = stringResource(R.string.empty_checklist_msg),
             style = MaterialTheme.typography.bodyLarge,
             color = Color(0xFF65658A),
             textAlign = TextAlign.Center
@@ -645,7 +650,7 @@ private fun AddItemField(
                         Box {
                             if (text.isEmpty()) {
                                 Text(
-                                    text = "작성해주시길 기다리고 있어요...",
+                                    text = stringResource(R.string.add_item_placeholder),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
                                 )
@@ -665,7 +670,7 @@ private fun AddItemField(
                         painter = painterResource(
                             if (editingItemText != null) R.drawable.ic_check else R.drawable.ic_plus
                         ),
-                        contentDescription = if (editingItemText != null) "수정 완료" else "추가",
+                        contentDescription = stringResource(if (editingItemText != null) R.string.cd_edit_done else R.string.cd_add_item),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp)
                     )
@@ -674,8 +679,8 @@ private fun AddItemField(
 
             // 상태 바: 하위 항목(HME_09) 또는 수정 모드(HME_09A)
             val statusLabel = when {
-                editingItemText != null -> "수정중"
-                parentName != null -> "하위 항목 작성중"
+                editingItemText != null -> stringResource(R.string.status_editing)
+                parentName != null -> stringResource(R.string.status_child_item)
                 else -> null
             }
             val statusValue = editingItemText ?: parentName

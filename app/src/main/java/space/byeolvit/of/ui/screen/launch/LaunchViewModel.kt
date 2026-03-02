@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import space.byeolvit.of.R
 import space.byeolvit.of.data.repository.DocumentRepository
 import space.byeolvit.of.data.repository.SettingsRepository
 
@@ -54,14 +55,14 @@ class LaunchViewModel(
                 settingsRepository.setSafRootUri(rootUri)
                 settingsRepository.setSafAppFolderUri(appFolderUri)
 
-                val defaultName = documentRepository.generateUniqueName(appFolderUri, "내 할일")
+                val defaultName = documentRepository.generateUniqueName(appFolderUri, context.getString(R.string.default_doc_name))
                 documentRepository.createDocument(appFolderUri, defaultName)
                 settingsRepository.setCurrentDocumentName(defaultName)
 
                 _uiState.update { it.copy(isLoading = false) }
                 _setupComplete.emit(Unit)
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "폴더 설정에 실패했습니다: ${e.message}") }
+                _uiState.update { it.copy(isLoading = false, error = context.getString(R.string.error_folder_setup)) }
             }
         }
     }

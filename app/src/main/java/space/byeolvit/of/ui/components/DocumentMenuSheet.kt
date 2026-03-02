@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,8 +57,8 @@ fun DocumentMenuSheet(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("문서 삭제") },
-            text = { Text("삭제한 파일은 다시 복구할 수 없습니다. 정말로 파일을 삭제하시겠어요?") },
+            title = { Text(stringResource(R.string.confirm_delete_title)) },
+            text = { Text(stringResource(R.string.confirm_delete_msg)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -66,12 +67,12 @@ fun DocumentMenuSheet(
                         onDismiss()
                     }
                 ) {
-                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.btn_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -81,12 +82,12 @@ fun DocumentMenuSheet(
         var nameText by remember { mutableStateOf(document.fileName.removeSuffix(".md")) }
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
-            title = { Text("이름 변경") },
+            title = { Text(stringResource(R.string.rename_title)) },
             text = {
                 OutlinedTextField(
                     value = nameText,
                     onValueChange = { nameText = it },
-                    label = { Text("문서 이름") },
+                    label = { Text(stringResource(R.string.doc_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -99,12 +100,12 @@ fun DocumentMenuSheet(
                     },
                     enabled = nameText.isNotBlank()
                 ) {
-                    Text("변경")
+                    Text(stringResource(R.string.btn_rename))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRenameDialog = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
@@ -140,8 +141,8 @@ fun DocumentMenuSheet(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    SummaryRow(label = "전체 항목", value = "${document.totalCount}개")
-                    SummaryRow(label = "완료한 항목", value = "${document.completedCount}개")
+                    SummaryRow(label = stringResource(R.string.doc_summary_total), value = stringResource(R.string.doc_summary_count, document.totalCount))
+                    SummaryRow(label = stringResource(R.string.doc_summary_completed), value = stringResource(R.string.doc_summary_count, document.completedCount))
                 }
             }
 
@@ -153,7 +154,7 @@ fun DocumentMenuSheet(
             ) {
                 DocumentMenuButton(
                     iconRes = R.drawable.ic_bin,
-                    label = "삭제",
+                    label = stringResource(R.string.delete_action),
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.weight(1f)
                 )
@@ -165,7 +166,7 @@ fun DocumentMenuSheet(
                 )
                 DocumentMenuButton(
                     iconRes = R.drawable.ic_pencil,
-                    label = "이름 변경",
+                    label = stringResource(R.string.rename_title),
                     onClick = { showRenameDialog = true },
                     modifier = Modifier.weight(1f)
                 )

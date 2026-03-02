@@ -1,4 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">궤도의 숲</string>
+    <string name="tagline">흩뜨러진 뭇별은 하나를 바라보는 고리가 되니.</string>
+
+    <!-- Buttons -->
+    <string name="btn_start">시작하기</string>
+    <string name="btn_cancel">취소</string>
+    <string name="btn_delete">삭제</string>
+    <string name="btn_rename">변경</string>
+    <string name="btn_create">만들기</string>
+
+    <!-- AI Footprint -->
+    <string name="ai_footprint_notice">본 어플리케이션은 개발 일부에 AI를 활용했습니다. 사용 이전에 AI Footprint 보고서로 내용을 검토할 수 있습니다.</string>
+    <string name="ai_footprint_link">AI Footprint 보고서</string>
+    <string name="ai_footprint_title">AI Footprint</string>
+    <string name="ai_footprint_desc">본 어플리케이션에서 AI가 활용된 부분을 표시합니다. 전체 내용은 AI Footprint 보고서를 참고해주세요.\n• 서비스 기획 : 일부 AI가 활용됨\n• 서비스 디자인 : AI를 사용하지 않음\n• 서비스 개발 (Android App) : 전부 AI가 활용됨</string>
+
+    <!-- Folder select -->
+    <string name="folder_select_title">저장 위치 설정</string>
+    <string name="folder_select_desc">.md 문서를 저장할 위치를 설정합니다. 선택한 폴더 하위에 \"Orbital Forest\" 폴더를 만듭니다.</string>
+
+    <!-- Home -->
+    <string name="lbl_new_doc_fab">새 문서 추가</string>
+    <string name="empty_document_msg">새로운 문서를 추가해야 할일을 만들 수 있어요.</string>
+    <string name="empty_checklist_msg">새로운 할일을 추가해보세요.</string>
+    <string name="add_item_placeholder">작성해주시길 기다리고 있어요…</string>
+    <string name="status_editing">수정중</string>
+    <string name="status_child_item">하위 항목 작성중</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_doc_info">문서 정보</string>
+    <string name="cd_new_doc">문서 생성</string>
+    <string name="cd_select_doc">문서 선택</string>
+    <string name="cd_settings">설정</string>
+    <string name="cd_add_item">추가</string>
+    <string name="cd_edit_done">수정 완료</string>
+    <string name="cd_back">뒤로</string>
+    <string name="cd_external_link">외부 링크</string>
+    <string name="cd_copy">복사</string>
+    <string name="cd_wordmark">궤도의 숲</string>
+
+    <!-- Select document -->
+    <string name="select_doc_title">문서 선택</string>
+    <string name="select_doc_banner">같은 폴더에 저장되어 있는 .md 문서가 모두 표시됩니다.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">설정</string>
+    <string name="settings_storage_change">저장 위치 변경</string>
+    <string name="settings_storage_change_desc">.md 문서를 저장할 위치를 변경합니다.</string>
+    <string name="settings_hide_completed">완료한 항목 숨기기</string>
+    <string name="settings_hide_non_checklist">체크리스트 이외 항목 숨기기</string>
+    <string name="settings_hide_non_checklist_desc">문서에 체크리스트 외 텍스트가 작성되어 있더라도, 목록에서 보여주지 않습니다.</string>
+    <string name="settings_child_interaction">하위 항목 상호작용</string>
+    <string name="settings_child_interaction_desc">하위 항목을 모두 체크하면 상위 항목도 같이 체크됩니다.</string>
+    <string name="settings_version">버전</string>
+    <string name="settings_designer">디자인</string>
+
+    <!-- Context menu actions -->
+    <string name="copy_action">복사</string>
+    <string name="delete_action">삭제</string>
+    <string name="edit_action">수정</string>
+    <string name="child_item_action">하위 항목</string>
+
+    <!-- Document menu -->
+    <string name="confirm_delete_title">문서 삭제</string>
+    <string name="confirm_delete_msg">삭제한 파일은 다시 복구할 수 없습니다. 정말로 파일을 삭제하시겠어요?</string>
+    <string name="rename_title">이름 변경</string>
+    <string name="doc_name_label">문서 이름</string>
+    <string name="doc_summary_total">전체 항목</string>
+    <string name="doc_summary_completed">완료한 항목</string>
+    <string name="doc_summary_count">%d개</string>
+
+    <!-- Checklist item row -->
+    <string name="error_too_deep">2단계 아래부터는 표시되지 않습니다.</string>
+    <string name="btn_open_file">문서 열기</string>
+
+    <!-- New document dialog -->
+    <string name="new_doc_dialog_title">새 문서 만들기</string>
+    <string name="default_doc_name">내 할일</string>
+    <string name="error_doc_exists">같은 이름의 문서가 이미 있습니다.</string>
+    <string name="error_doc_create_failed">문서 생성에 실패했습니다.</string>
+    <string name="error_folder_setup">폴더 설정에 실패했습니다.</string>
+
+    <!-- Snackbar messages -->
+    <string name="snack_item_deleted">항목을 삭제했습니다.</string>
+    <string name="snack_undo">실행 취소</string>
+    <string name="snack_copied">클립보드에 복사했습니다.</string>
+    <string name="snack_edited">수정되었습니다.</string>
+    <string name="snack_renamed">이름이 변경되었습니다.</string>
+    <string name="snack_rename_failed">이름 변경에 실패했습니다.</string>
+    <string name="snack_doc_deleted">문서를 삭제했습니다.</string>
+    <string name="snack_doc_delete_failed">문서 삭제에 실패했습니다.</string>
+    <string name="snack_doc_created">새 문서를 생성했어요.</string>
 </resources>

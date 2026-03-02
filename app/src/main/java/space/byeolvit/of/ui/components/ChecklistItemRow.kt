@@ -17,9 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import space.byeolvit.of.R
 import space.byeolvit.of.data.model.ChecklistItem
 import space.byeolvit.of.util.parseInlineMarkdown
 
@@ -107,13 +109,13 @@ private fun ErrorChecklistItem(onOpenFile: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "2단계 아래부터는 표시되지 않습니다.",
+            text = stringResource(R.string.error_too_deep),
             style = MaterialTheme.typography.labelMedium,
             color = ErrorText,
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = "문서 열기",
+            text = stringResource(R.string.btn_open_file),
             style = MaterialTheme.typography.labelMedium.copy(
                 textDecoration = TextDecoration.Underline
             ),

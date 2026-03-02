@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -97,14 +98,14 @@ fun SelectDocumentScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "뒤로",
+                                contentDescription = stringResource(R.string.cd_back),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
                 Text(
-                    text = "문서 선택",
+                    text = stringResource(R.string.select_doc_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
@@ -121,7 +122,7 @@ fun SelectDocumentScreen(
                     .padding(horizontal = 24.dp)
             ) {
                 Text(
-                    text = "같은 폴더에 저장되어 있는 .md 문서가 모두 표시됩니다.",
+                    text = stringResource(R.string.select_doc_banner),
                     style = MaterialTheme.typography.labelMedium,
                     color = Color(0xFF74E8FF),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
