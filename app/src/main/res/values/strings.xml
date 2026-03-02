@@ -55,6 +55,7 @@
     <string name="settings_child_interaction_desc">하위 항목을 모두 체크하면 상위 항목도 같이 체크됩니다.</string>
     <string name="settings_version">버전</string>
     <string name="settings_designer">디자인</string>
+    <string name="settings_oss_licenses">오픈소스 라이선스</string>
 
     <!-- Context menu actions -->
     <string name="copy_action">복사</string>

@@ -51,7 +51,8 @@ private const val AI_FOOTPRINT_URL = "https://github.com/Luminon/orbital_forest/
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
-    onFolderReselected: () -> Unit
+    onFolderReselected: () -> Unit,
+    onNavigateToLicenses: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val uriHandler = LocalUriHandler.current
@@ -218,6 +219,10 @@ fun SettingsScreen(
                     SettingsInfoItem(label = stringResource(R.string.settings_version), value = uiState.appVersion)
                     SettingsInfoItem(label = stringResource(R.string.settings_designer), value = "Luminon Canoness")
                     AiFootprintItem(onClick = { uriHandler.openUri(AI_FOOTPRINT_URL) })
+                    SettingsActionItem(
+                        title = stringResource(R.string.settings_oss_licenses),
+                        onClick = onNavigateToLicenses
+                    )
                 }
             }
 

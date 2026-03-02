@@ -30,6 +30,7 @@ import space.byeolvit.of.ui.screen.home.HomeScreen
 import space.byeolvit.of.ui.screen.home.HomeViewModel
 import space.byeolvit.of.ui.screen.launch.LaunchScreen
 import space.byeolvit.of.ui.screen.launch.LaunchViewModel
+import space.byeolvit.of.ui.screen.licenses.LicensesScreen
 import space.byeolvit.of.ui.screen.select.SelectDocumentScreen
 import space.byeolvit.of.ui.screen.select.SelectDocumentViewModel
 import space.byeolvit.of.ui.screen.settings.SettingsScreen
@@ -151,8 +152,13 @@ fun OrbitalForestNavGraph(navController: NavHostController) {
                     navController.navigate(Screen.Launch.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToLicenses = { navController.navigate(Screen.Licenses.route) }
             )
+        }
+
+        composable(Screen.Licenses.route) {
+            LicensesScreen(onBack = { navController.popBackStack() })
         }
     }
 }

@@ -12,7 +12,7 @@
 ## 빌드 설정
 
 - **Gradle**: 8.13 (`gradle/wrapper/gradle-wrapper.properties`)
-- **AGP**: 8.9.0, **Kotlin**: 2.1.0, **compileSdk**: 35, **minSdk**: 26
+- **AGP**: 9.0.1, **Kotlin**: 2.2.10, **compileSdk**: 35, **minSdk**: 26
 - **Compose BOM**: 2025.02.00
 - **주요 의존성**: navigation-compose 2.8.7, datastore-preferences 1.1.2, documentfile 1.1.0, material-icons-extended
 
@@ -50,12 +50,14 @@ app/src/main/java/space/byeolvit/of/
 │   │   ├── home/    HomeScreen.kt + HomeViewModel.kt + newdoc/
 │   │   ├── select/  SelectDocumentScreen.kt + SelectDocumentViewModel.kt
 │   │   └── settings/ SettingsScreen.kt + SettingsViewModel.kt
+│   ├── licenses/ LicensesScreen.kt  ← 오픈소스 라이선스 화면
 │   └── navigation/
-│       ├── Screen.kt
+│       ├── Screen.kt               # Launch, Home, SelectDocument, Settings, Licenses
 │       └── NavGraph.kt
 └── util/
     ├── AnnotatedStringBuilder.kt  # **bold** *italic* ~~strike~~
-    └── SafUtils.kt
+    ├── SafUtils.kt
+    └── UiText.kt                  # sealed class: StringResource(@StringRes) | DynamicString
 
 app/src/main/res/
 ├── drawable/
@@ -67,10 +69,14 @@ app/src/main/res/
 │   └── ic_add.xml, ic_plus.xml, ic_file_add.xml, ic_doc_lists.xml
 │       ic_settings.xml, ic_documents.xml, ic_bin.xml, ic_copy.xml
 │       ic_pencil.xml, ic_external.xml, ic_check.xml   ← 커스텀 아이콘
-├── font/ pretendard_variable.ttf
+├── font/ pretendard_variable.ttf   ← SIL OFL 1.1 라이선스
 ├── mipmap-anydpi-v26/ ic_launcher.xml, ic_launcher_round.xml (Adaptive Icon)
 ├── mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/ ic_launcher.png, ic_launcher_round.png
-└── values/ strings.xml, themes.xml
+└── values/
+    ├── strings.xml        ← 한국어 (기본값, ~58개 항목)
+    ├── themes.xml
+    ├── values-en/strings.xml  ← 영어
+    └── values-ja/strings.xml  ← 일본어
 
 Sources/  (소스 에셋 — 앱에 직접 포함되지 않음)
 ├── Icons/    ← SVG 원본 (ic_add, ic_plus, ic_file_add, ic_doc_lists,
@@ -278,6 +284,32 @@ LaunchedEffect(Unit) {
   - `SettingsToggleItem`: clickable Row + Switch, `horizontalArrangement=spacedBy(8dp)`
   - `SettingsInfoItem`: Row + 오른쪽 value 텍스트 (primary색)
   - `AiFootprintItem`: clickable Row + ic_external 아이콘 + 설명+불렛포인트
+  - `SettingsActionItem(settings_oss_licenses)`: 앱 정보 그룹 최하단 → LicensesScreen으로 이동
+- 태그라인 텍스트: `textAlign = TextAlign.Center` 적용
+
+### LicensesScreen UI 구조 (`ui/screen/licenses/LicensesScreen.kt`)
+- Scaffold-free, Box 오버레이 구조 + `verticalScroll` (SettingsScreen과 동일)
+- 배경: `#13131A` + Canvas radial gradient 글로우, 앱바: 뒤로가기 + titleLarge
+- `LibraryLicense(name, copyright, license)` data class
+- **Apache 2.0 섹션** (9개 라이브러리): AndroidX Core KTX, Lifecycle, Activity, Jetpack Compose, Navigation, DataStore, DocumentFile, Kotlin, Kotlin Coroutines
+- **OFL 1.1 섹션** (1개): Pretendard Variable — 저작권자 4곳 (Kil Hyung-jin, Adobe Systems/Source Han Sans, The Inter Project Authors, The M+ FONTS Project Authors)
+- 각 섹션 하단에 해당 라이선스 전문을 `LicenseTextCard`(monospace)로 표시
+- Screen.Licenses → `Screen("licenses")`, NavGraph에 composable 라우트 추가
+
+### i18n 구조 (다국어 지원)
+- **`util/UiText.kt`**: ViewModel에서 string resource ID 보관 → Composable에서 `.asString()` resolve
+  ```kotlin
+  sealed class UiText {
+      data class StringResource(@StringRes val resId: Int) : UiText()
+      data class DynamicString(val value: String) : UiText()
+      @Composable fun asString(): String = ...
+  }
+  ```
+- **strings.xml 3벌**: `values/`(한국어, ~58개 항목), `values-en/`(영어), `values-ja/`(일본어)
+- **UiText 적용 위치**: `HomeUiState.snackbarMessage: UiText?`, `SnackbarAction.label: UiText`, `NewDocumentUiState.error: UiText?`
+- **`@Composable` 제약 우회**: `asString()`은 LaunchedEffect 내부 호출 불가 → Composable scope에서 미리 resolve 후 변수로 전달
+- **ViewModel의 문자열**: Context 보유 ViewModel(`LaunchViewModel`)은 `context.getString(R.string.xxx)` 직접 사용
+- **`NewDocumentViewModel.loadDefaultName(baseName: String)`**: 하드코딩 제거, Dialog에서 `stringResource(R.string.default_doc_name)` resolve 후 전달
 
 ### 전체 타이포그래피 한국어 줄바꿈 (word-break: keep-all)
 - `Type.kt`의 모든 텍스트 스타일에 `lineBreak = keepAllLineBreak` 적용
@@ -338,13 +370,14 @@ LaunchedEffect(Unit) {
 | `combine` stale 중간값 문제 | 4개 Flow를 combine 시 `currentDocumentName` 변경 시 stale Triple 방출 | `currentDocumentName`을 combine에서 분리, 독립 collector + `loadDocumentJob` 취소 패턴 |
 | AlertDialog 이상한 줄바꿈 | `LineBreak.Paragraph`(HighQuality 전략)이 단락 최적화로 불균형 줄바꿈 발생 | `keepAllLineBreak = LineBreak.Simple.copy(wordBreak = LineBreak.WordBreak.Phrase)`로 변경 |
 | NavGraph.kt 컴파일 오류 | `private val` 선언이 import 블록 중간에 삽입됨 (`imports are only allowed in the beginning of file`) | 모든 import 이후로 private val 이동 |
+| 전체 문서 삭제 후 빈 화면 미표시 | `HomeViewModel.init`의 `currentDocumentName` collector가 `if (name.isNotEmpty())` 분기만 있고 else 없음 → currentDocument 상태 미초기화 | `else { _uiState.update { it.copy(currentDocument = null) } }` 추가 |
+| NavGraph `getBackStackEntry` Compose 경고 | `remember(navController)` — navController는 key로 부적합 | `remember(backStackEntry)` (composable 람다 파라미터)로 변경 |
 
 ---
 
 ## 아직 미완성 항목
 
 - **Empty View 이미지**: `Sources/UI/ic_empty.svg` — HME_01(문서없음), HME_15(체크리스트없음)에 미적용 (현재 텍스트만)
-- **AI FootPrint URL**: `https://example.com/ai-footprint` 플레이스홀더 → LaunchScreen + SettingsScreen 두 곳 교체 필요
 - **복사 기능**: `onCopyItem()`이 Snackbar만 표시, 실제 클립보드 복사 미구현
 
 ---

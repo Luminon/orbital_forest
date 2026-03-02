@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Orbital Forest</string>
+    <string name="tagline">散りばめられた星々は、一つを見つめる環となる。</string>
+
+    <!-- Buttons -->
+    <string name="btn_start">はじめる</string>
+    <string name="btn_cancel">キャンセル</string>
+    <string name="btn_delete">削除</string>
+    <string name="btn_rename">変更</string>
+    <string name="btn_create">作成</string>
+
+    <!-- AI Footprint -->
+    <string name="ai_footprint_notice">本アプリの開発には一部AIを活用しています。ご利用前にAI Footprint レポートで内容をご確認いただけます。</string>
+    <string name="ai_footprint_link">AI Footprint レポート</string>
+    <string name="ai_footprint_title">AI Footprint</string>
+    <string name="ai_footprint_desc">本アプリでAIが活用された部分を表示します。詳細はAI Footprint レポートをご参照ください。\n• サービス企画：一部AIを活用\n• サービスデザイン：AI不使用\n• サービス開発（Android App）：全面的にAIを活用</string>
+
+    <!-- Folder select -->
+    <string name="folder_select_title">保存場所の設定</string>
+    <string name="folder_select_desc">.mdドキュメントの保存場所を設定します。選択したフォルダ内に\"Orbital Forest\"フォルダを作成します。</string>
+
+    <!-- Home -->
+    <string name="lbl_new_doc_fab">新規ドキュメント</string>
+    <string name="empty_document_msg">新しいドキュメントを追加してタスクを作成しましょう。</string>
+    <string name="empty_checklist_msg">新しいタスクを追加してみましょう。</string>
+    <string name="add_item_placeholder">入力してください…</string>
+    <string name="status_editing">編集中</string>
+    <string name="status_child_item">子項目を作成中</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_doc_info">ドキュメント情報</string>
+    <string name="cd_new_doc">新規作成</string>
+    <string name="cd_select_doc">ドキュメント選択</string>
+    <string name="cd_settings">設定</string>
+    <string name="cd_add_item">追加</string>
+    <string name="cd_edit_done">完了</string>
+    <string name="cd_back">戻る</string>
+    <string name="cd_external_link">外部リンク</string>
+    <string name="cd_copy">コピー</string>
+    <string name="cd_wordmark">Orbital Forest</string>
+
+    <!-- Select document -->
+    <string name="select_doc_title">ドキュメント選択</string>
+    <string name="select_doc_banner">同じフォルダに保存されている.mdドキュメントがすべて表示されます。</string>
+
+    <!-- Settings -->
+    <string name="settings_title">設定</string>
+    <string name="settings_storage_change">保存場所の変更</string>
+    <string name="settings_storage_change_desc">.mdドキュメントの保存場所を変更します。</string>
+    <string name="settings_hide_completed">完了済み項目を非表示</string>
+    <string name="settings_hide_non_checklist">チェックリスト以外を非表示</string>
+    <string name="settings_hide_non_checklist_desc">ドキュメントにチェックリスト以外のテキストがあっても、リストに表示しません。</string>
+    <string name="settings_child_interaction">子項目の連動</string>
+    <string name="settings_child_interaction_desc">子項目をすべてチェックすると、親項目も一緒にチェックされます。</string>
+    <string name="settings_version">バージョン</string>
+    <string name="settings_designer">デザイン</string>
+    <string name="settings_oss_licenses">オープンソースライセンス</string>
+
+    <!-- Context menu actions -->
+    <string name="copy_action">コピー</string>
+    <string name="delete_action">削除</string>
+    <string name="edit_action">編集</string>
+    <string name="child_item_action">子項目</string>
+
+    <!-- Document menu -->
+    <string name="confirm_delete_title">ドキュメントの削除</string>
+    <string name="confirm_delete_msg">削除したファイルは復元できません。本当に削除しますか？</string>
+    <string name="rename_title">名前の変更</string>
+    <string name="doc_name_label">ドキュメント名</string>
+    <string name="doc_summary_total">全項目</string>
+    <string name="doc_summary_completed">完了済み</string>
+    <string name="doc_summary_count">%d個</string>
+
+    <!-- Checklist item row -->
+    <string name="error_too_deep">2段階以下の項目は表示されません。</string>
+    <string name="btn_open_file">ファイルを開く</string>
+
+    <!-- New document dialog -->
+    <string name="new_doc_dialog_title">新規ドキュメント</string>
+    <string name="default_doc_name">マイタスク</string>
+    <string name="error_doc_exists">同じ名前のドキュメントが既に存在します。</string>
+    <string name="error_doc_create_failed">ドキュメントの作成に失敗しました。</string>
+    <string name="error_folder_setup">フォルダの設定に失敗しました。</string>
+
+    <!-- Snackbar messages -->
+    <string name="snack_item_deleted">項目を削除しました。</string>
+    <string name="snack_undo">元に戻す</string>
+    <string name="snack_copied">クリップボードにコピーしました。</string>
+    <string name="snack_edited">更新しました。</string>
+    <string name="snack_renamed">名前を変更しました。</string>
+    <string name="snack_rename_failed">名前の変更に失敗しました。</string>
+    <string name="snack_doc_deleted">ドキュメントを削除しました。</string>
+    <string name="snack_doc_delete_failed">ドキュメントの削除に失敗しました。</string>
+    <string name="snack_doc_created">新しいドキュメントを作成しました。</string>
+</resources>
