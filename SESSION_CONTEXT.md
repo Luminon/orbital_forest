@@ -375,10 +375,15 @@ LaunchedEffect(Unit) {
 
 ---
 
+## 완료된 추가 작업
+
+- **Empty View 이미지**: HME_01, HME_15 적용 완료
+- **클립보드 복사**: `HomeScreen.kt`에서 `ClipboardManager.setPrimaryClip()` 구현 완료
+- **가로화면 차단**: `AndroidManifest.xml` MainActivity에 `android:screenOrientation="portrait"` 추가
+
 ## 아직 미완성 항목
 
-- **Empty View 이미지**: `Sources/UI/ic_empty.svg` — HME_01(문서없음), HME_15(체크리스트없음)에 미적용 (현재 텍스트만)
-- **복사 기능**: `onCopyItem()`이 Snackbar만 표시, 실제 클립보드 복사 미구현
+현재 미완성 항목 없음.
 
 ---
 
