@@ -18,3 +18,24 @@
 ## 참고사항
 
 본 어플리케이션은 개발 일부에 AI를 활용했습니다. 사용 이전에 [AI Footprint 보고서](ai_footprint.md)로 내용을 검토할 수 있습니다.
+
+---
+
+# Orbital Forest
+
+> "The scattered stars become a ring, all gazing toward one."
+
+Orbital Forest is a fully local to-do list app based on Markdown files.
+
+- Quickly capture and manage your tasks and notes. Unlike heavy Markdown editors and to-do apps, it launches fast.
+- Completely local and file-based. Your to-do lists are stored and managed as Markdown (.md) files directly on your device. You can freely access your lists from other apps or even after you stop using Orbital Forest.
+- Just as each task becomes a dot that forms a ring — the inspiration behind the name "Orbital Forest" — enjoy a beautiful, space-inspired design while you take notes.
+
+## Download
+
+- [Google Play](https://play.google.com/store/apps/details?id=space.byeolvit.of)
+- [Direct Download](https://github.com/Luminon/orbital_forest/releases/tag/v1.0.0.r1)
+
+## Note
+
+This application was developed with partial AI assistance. You can review the details in the [AI Footprint report](ai_footprint.md) before use.
